@@ -53,8 +53,8 @@ export default function VehiclesPage() {
     setPage(1)
   }
 
-  function handleType(val: string) {
-    setTypeFilter(val as TypeFilter)
+  function handleType(val: string | null) {
+    setTypeFilter((val ?? '') as TypeFilter)
     setPage(1)
   }
 

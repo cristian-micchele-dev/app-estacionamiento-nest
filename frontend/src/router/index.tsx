@@ -15,7 +15,6 @@ import AuditPage from '@/pages/AuditPage'
 import ReportsPage from '@/pages/ReportsPage'
 import ProfilePage from '@/pages/ProfilePage'
 
-const ALL_ROLES = ['ADMIN', 'CASHIER', 'SUPERVISOR']
 const ADMIN_SUPERVISOR = ['ADMIN', 'SUPERVISOR']
 const ADMIN_ONLY = ['ADMIN']
 

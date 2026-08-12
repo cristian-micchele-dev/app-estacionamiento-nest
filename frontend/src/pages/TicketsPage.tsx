@@ -284,7 +284,7 @@ export default function TicketsPage() {
   }
 
   function handleSearch(val: string) { setSearch(val); setPage(1) }
-  function handleStatus(val: string) { setStatus(val as StatusFilter); setPage(1) }
+  function handleStatus(val: string | null) { setStatus((val ?? '') as StatusFilter); setPage(1) }
 
   const isToday = date === TODAY
   const dateLabel = isToday

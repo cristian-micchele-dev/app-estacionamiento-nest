@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { useTickets } from '@/hooks/useTickets'
-import { ticketsService } from '@/services/tickets.service'
+import { ticketsService, type TicketStatus } from '@/services/tickets.service'
 
 vi.mock('@/services/tickets.service', () => ({
   ticketsService: {
@@ -65,8 +65,8 @@ describe('useTickets', () => {
 
   it('refetches when status filter changes', async () => {
     const { rerender } = renderHook(
-      ({ status }: { status?: string }) => useTickets({ status, page: 1, limit: 20 }),
-      { wrapper: ToastProvider, initialProps: { status: undefined } }
+      ({ status }: { status?: TicketStatus }) => useTickets({ status, page: 1, limit: 20 }),
+      { wrapper: ToastProvider, initialProps: { status: undefined as TicketStatus | undefined } }
     )
 
     await flush()

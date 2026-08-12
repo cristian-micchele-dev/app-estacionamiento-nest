@@ -3,7 +3,7 @@ import { LogIn, LogOut, Car, Clock, TrendingUp, CheckCircle } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import EntryModal from '@/components/parking/EntryModal'
 import ExitModal, { type SessionForExit } from '@/components/parking/ExitModal'
-import { VEHICLE_TYPE_LABEL, PAYMENT_METHOD_LABEL, formatElapsed, formatTime } from '@/data/parking.data'
+import { VEHICLE_TYPE_LABEL, formatElapsed, formatTime } from '@/data/parking.data'
 import { formatDuration } from '@/lib/time'
 import { parkingService, type ParkingSessionApi, type ParkingStats } from '@/services/parking.service'
 import { tariffsService, type TariffApi } from '@/services/tariffs.service'
@@ -63,12 +63,6 @@ const VEHICLE_TYPE_CLASSES: Record<string, { bg: string; text: string }> = {
   VAN:        { bg: 'bg-green-50',   text: 'text-green-500'  },
 }
 
-const PAYMENT_CLASSES: Record<string, { bg: string; text: string }> = {
-  CASH:         { bg: 'bg-green-50',  text: 'text-green-700'  },
-  CARD:         { bg: 'bg-blue-50',   text: 'text-blue-500'   },
-  TRANSFER:     { bg: 'bg-violet-50', text: 'text-violet-600' },
-  MONTHLY_PASS: { bg: 'bg-signal/10',  text: 'text-signal-dark'  },
-}
 
 const STAT_CARDS = (
   stats: ParkingStats | null,

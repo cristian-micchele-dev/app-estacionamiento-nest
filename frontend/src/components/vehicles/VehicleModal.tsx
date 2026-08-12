@@ -8,15 +8,15 @@ import { Car } from 'lucide-react'
 import {
   VEHICLE_TYPE_LABEL,
   COLOR_SWATCHES,
-  type Vehicle,
   type VehicleType,
 } from '@/data/vehicles.data'
+import { type VehicleApi } from '@/services/vehicles.service'
 
 interface VehicleModalProps {
   open: boolean
-  vehicle: Vehicle | null
+  vehicle: VehicleApi | null
   onClose: () => void
-  onConfirm: (data: Omit<Vehicle, 'id' | 'lastVisit' | 'totalVisits'>) => void
+  onConfirm: (data: Omit<VehicleApi, 'id' | 'createdAt'>) => void
 }
 
 const EMPTY = { plate: '', type: 'CAR' as VehicleType, brand: '', color: '', observations: '' }
@@ -95,7 +95,7 @@ export default function VehicleModal({ open, vehicle, onClose, onConfirm }: Vehi
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold" style={{ color: 'var(--text-label)' }}>Tipo</label>
-              <Select value={form.type} onValueChange={v => set('type', v)}>
+              <Select value={form.type} onValueChange={v => set('type', v ?? '')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(VEHICLE_TYPE_LABEL) as [VehicleType, string][]).map(([v, l]) => (

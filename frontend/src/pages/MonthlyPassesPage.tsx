@@ -50,9 +50,9 @@ export default function MonthlyPassesPage() {
 
   async function handleAdd(data: MonthlyPassFormData) {
     const vehicles = await vehiclesService.findAll()
-    let vehicle = vehicles.find(v => v.plate === data.plate.toUpperCase())
+    let vehicle = vehicles.data.find((v: { plate: string }) => v.plate === data.plate.toUpperCase())
     if (!vehicle) {
-      vehicle = await vehiclesService.create({ plate: data.plate.toUpperCase(), type: data.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRUCK' | 'VAN' | 'BUS' })
+      vehicle = await vehiclesService.create({ plate: data.plate.toUpperCase(), type: data.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRUCK' | 'VAN' | 'BUS', brand: null, color: null, observations: null })
     }
     const created = await monthlyPassesService.create({
       vehicleId: vehicle.id,
