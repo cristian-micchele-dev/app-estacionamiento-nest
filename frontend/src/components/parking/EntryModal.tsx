@@ -230,7 +230,7 @@ export default function EntryModal({ open, tariffs, onClose, onConfirm }: EntryM
             <label className="text-[13px] font-semibold" style={{ color: 'var(--text-label)' }}>
               Tarifa
             </label>
-            <Select value={defaultTariffId} onValueChange={setTariffId}>
+            <Select value={defaultTariffId} onValueChange={v => setTariffId(v ?? '')}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

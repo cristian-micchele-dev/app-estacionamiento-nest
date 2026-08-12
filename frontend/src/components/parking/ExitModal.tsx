@@ -80,7 +80,6 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="sm:max-w-md"
-        onOpenAutoFocus={e => { e.preventDefault(); receivedRef.current?.focus() }}
       >
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
@@ -104,7 +103,7 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
                 {session.plate}
               </span>
               <span className="text-[12px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'var(--badge-blue-bg)', color: 'var(--badge-blue-text)' }}>
-                {VEHICLE_TYPE_LABEL[session.vehicleType]}
+                {VEHICLE_TYPE_LABEL[session.vehicleType as keyof typeof VEHICLE_TYPE_LABEL] ?? session.vehicleType}
               </span>
             </div>
 
