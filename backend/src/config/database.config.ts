@@ -14,7 +14,7 @@ export default registerAs(
     migrationsRun: true,
     ssl:
       process.env.DATABASE_URL?.includes('supabase') || process.env.NODE_ENV === 'production'
-        ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' }
+        ? { rejectUnauthorized: false }
         : false,
   }),
 );
