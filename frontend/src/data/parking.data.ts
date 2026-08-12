@@ -1,4 +1,4 @@
-export type VehicleType = 'CAR' | 'MOTORCYCLE' | 'TRUCK' | 'VAN'
+export type VehicleType = 'CAR' | 'MOTORCYCLE' | 'TRUCK' | 'VAN' | 'BUS'
 export type SessionStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
 export type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'MONTHLY_PASS'
 
@@ -7,6 +7,7 @@ export const VEHICLE_TYPE_LABEL: Record<VehicleType, string> = {
   MOTORCYCLE: 'Motocicleta',
   TRUCK:      'Camión',
   VAN:        'Camioneta',
+  BUS:        'Autobús',
 }
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {

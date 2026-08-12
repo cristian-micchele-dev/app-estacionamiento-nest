@@ -49,6 +49,8 @@ export default function EntryModal({ open, tariffs, onClose, onConfirm }: EntryM
   useEffect(() => {
     if (!open) return
     spacesService.findAll().then(setSpaces)
+    const t = setTimeout(() => plateRef.current?.focus(), 50)
+    return () => clearTimeout(t)
   }, [open])
 
   useEffect(() => {
@@ -122,7 +124,6 @@ export default function EntryModal({ open, tariffs, onClose, onConfirm }: EntryM
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="sm:max-w-xl flex flex-col max-h-[90vh]"
-        onOpenAutoFocus={e => { e.preventDefault(); plateRef.current?.focus() }}
       >
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
