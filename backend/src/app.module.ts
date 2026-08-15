@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
@@ -24,9 +25,13 @@ import { MonthlyPassesModule } from './monthly-passes/monthly-passes.module';
 import { AuditModule } from './audit/audit.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 200 }],
+    }),
     CacheModule.register({ isGlobal: true, ttl: 45_000, max: 100 }),
     WinstonModule.forRoot(loggerConfig),
     ConfigModule.forRoot({
@@ -51,6 +56,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     SpacesModule,
     AuditModule,
     DashboardModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -58,6 +64,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

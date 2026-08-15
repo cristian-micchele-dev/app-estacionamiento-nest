@@ -1,4 +1,5 @@
 import { Controller, MessageEvent, Sse } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Observable } from 'rxjs';
 import { ParkingEventsService } from './parking-events.service';
 
@@ -7,6 +8,7 @@ import { ParkingEventsService } from './parking-events.service';
  * No auth guard: the event payload carries no sensitive data (only the event type).
  * Data retrieval still happens through the protected REST endpoints.
  */
+@SkipThrottle()
 @Controller('parking')
 export class ParkingEventsController {
   constructor(private readonly eventsService: ParkingEventsService) {}
