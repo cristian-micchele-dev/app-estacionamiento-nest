@@ -317,7 +317,7 @@ export default function TicketsPage() {
     setSelectedTicket(null)
   }
 
-  function handleSearch(val: string) { setSearch(val); setPage(1) }
+  function handleSearch(val: string) { setSearch(val.trim()); setPage(1) }
   function handleStatus(val: string | null) { setStatus((val ?? '') as StatusFilter); setPage(1) }
   function clearFilters() { setSearch(''); setStatus(''); setPage(1) }
 
