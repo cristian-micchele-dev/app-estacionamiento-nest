@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, Lock, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Clock, Lock, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import OpenShiftModal from '@/components/shifts/OpenShiftModal'
 import CloseShiftModal from '@/components/shifts/CloseShiftModal'
@@ -56,11 +56,14 @@ function toMockShift(s: ShiftApi): Shift {
   }
 }
 
+const SHIFTS_PER_PAGE = 10
+
 export default function ShiftsPage() {
   const [shifts, setShifts] = useState<ShiftApi[]>([])
   const [openModal, setOpenModal] = useState(false)
   const [closeModal, setCloseModal] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [historyPage, setHistoryPage] = useState(1)
 
   useEffect(() => {
     shiftsService.findAll().then(setShifts).finally(() => setLoading(false))
@@ -68,6 +71,8 @@ export default function ShiftsPage() {
 
   const activeShift  = shifts.find(s => s.status === 'OPEN') ?? null
   const closedShifts = shifts.filter(s => s.status === 'CLOSED').sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
+  const totalHistoryPages = Math.ceil(closedShifts.length / SHIFTS_PER_PAGE)
+  const pagedShifts = closedShifts.slice((historyPage - 1) * SHIFTS_PER_PAGE, historyPage * SHIFTS_PER_PAGE)
 
   async function handleOpenShift(openingBalance: number) {
     const shift = await shiftsService.open(openingBalance)
@@ -174,7 +179,7 @@ export default function ShiftsPage() {
                 </tr>
               </thead>
               <tbody>
-                {closedShifts.map((shift, i) => (
+                {pagedShifts.map((shift, i) => (
                   <tr key={shift.id} className={`hover:bg-slate-50 transition-colors ${i > 0 ? 'border-t border-slate-50' : ''}`}>
                     <td className="px-4 py-3">
                       <span className="text-[13px] font-semibold text-ink">{shift.cashier.name}</span>
@@ -195,6 +200,30 @@ export default function ShiftsPage() {
                 ))}
               </tbody>
             </table>
+
+            {totalHistoryPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+                <span className="text-[12px] text-slate-400">
+                  Página {historyPage} de {totalHistoryPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setHistoryPage(p => p - 1)}
+                    disabled={historyPage === 1}
+                    className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-500"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setHistoryPage(p => p + 1)}
+                    disabled={historyPage === totalHistoryPages}
+                    className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-500"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

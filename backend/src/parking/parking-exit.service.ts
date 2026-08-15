@@ -65,6 +65,32 @@ export class ParkingExitService {
     });
   }
 
+  async previewCost(sessionId: string): Promise<{
+    durationMinutes: number;
+    hasMonthlyPass: boolean;
+    estimatedTotal: number;
+  }> {
+    const sessionRepo = this.dataSource.getRepository(ParkingSessionOrmEntity);
+    const session = await sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['vehicle', 'tariff'],
+    });
+    if (!session) throw new NotFoundException('SESSION_NOT_FOUND');
+    if (session.status !== SessionStatus.ACTIVE)
+      throw new BadRequestException('SESSION_NOT_ACTIVE');
+
+    const now = new Date();
+    const durationMinutes = Math.floor(
+      (now.getTime() - session.entryTime.getTime()) / 60000,
+    );
+    const hasMonthlyPass = session.monthlyPassId !== null;
+    const estimatedTotal = hasMonthlyPass
+      ? 0
+      : this.calculateAmount(session.entryTime, now, session.tariff);
+
+    return { durationMinutes, hasMonthlyPass, estimatedTotal };
+  }
+
   /**
    * Cierra la sesión y libera el espacio dentro de un EntityManager externo
    * (llamado desde TicketsService.pay() dentro de su propia transacción).
@@ -111,7 +137,7 @@ export class ParkingExitService {
    *    Sin `overnightRate`, todos los minutos usan `pricePerHalfHour`.
    * 4. El total se limita a `dailyMax` si está definido.
    */
-  private calculateAmount(
+  calculateAmount(
     entryTime: Date,
     exitTime: Date,
     tariff: TariffOrmEntity,

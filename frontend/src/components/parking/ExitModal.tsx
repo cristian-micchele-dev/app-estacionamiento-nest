@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import {
   formatTime,
   type PaymentMethod,
 } from '@/data/parking.data'
+import { parkingService } from '@/services/parking.service'
 
 export interface SessionForExit {
   id: string
@@ -34,14 +35,39 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH')
   const [receivedAmount, setReceivedAmount] = useState('')
   const [loading, setLoading] = useState(false)
+  const [serverAmount, setServerAmount] = useState<number | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
   const receivedRef = useRef<HTMLInputElement>(null)
 
-  const amount = useMemo(() => {
-    if (!session) return 0
-    const minutes = Math.floor((Date.now() - session.entryTime.getTime()) / 60000)
-    if (minutes <= (session.toleranceMinutes ?? 10)) return 0
-    return Math.round((minutes / 60) * Number(session.pricePerHour))
-  }, [session])
+  // Fetch accurate cost from server when modal opens
+  useEffect(() => {
+    if (!open || !session) return
+    setServerAmount(null)
+    setPreviewLoading(true)
+    parkingService
+      .previewCost(session.id)
+      .then(data => setServerAmount(data.estimatedTotal))
+      .catch(() => {
+        // Fallback to client-side estimate on error
+        const minutes = Math.floor((Date.now() - session.entryTime.getTime()) / 60000)
+        if (minutes <= session.toleranceMinutes) {
+          setServerAmount(0)
+        } else {
+          setServerAmount(Math.round((minutes / 60) * session.pricePerHour))
+        }
+      })
+      .finally(() => setPreviewLoading(false))
+  }, [open, session])
+
+  // Auto-focus received amount when CASH is selected and amount is ready
+  useEffect(() => {
+    if (paymentMethod === 'CASH' && serverAmount !== null && !previewLoading) {
+      const t = setTimeout(() => receivedRef.current?.focus(), 50)
+      return () => clearTimeout(t)
+    }
+  }, [paymentMethod, serverAmount, previewLoading])
+
+  const amount = serverAmount ?? 0
 
   const change = useMemo(() => {
     const received = parseInt(receivedAmount, 10)
@@ -65,22 +91,19 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
   function handleClose() {
     setPaymentMethod('CASH')
     setReceivedAmount('')
+    setServerAmount(null)
     onClose()
   }
 
   if (!session) return null
 
   const elapsed = formatElapsed(session.entryTime)
-  const diffMinutes = Math.floor((new Date().getTime() - session.entryTime.getTime()) / 60000)
-  const hours = Math.ceil(diffMinutes / 60)
   const isCash = paymentMethod === 'CASH'
   const changeOk = !isCash || (change !== null && change >= 0)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="sm:max-w-md"
-      >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: 'var(--icon-bg-red)' }}>
@@ -133,19 +156,23 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
 
             {/* Amount */}
             <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border-field)' }}>
-              <div>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  {session.tariffName} · {hours}h × ${session.pricePerHour.toLocaleString('es-AR')}/h
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Banknote size={14} style={{ color: '#16A34A' }} />
-                <span
-                  className="text-[22px] font-bold"
-                  style={{ fontFamily: 'JetBrains Mono, monospace', color: '#16A34A' }}
-                >
-                  ${amount.toLocaleString('es-AR')}
-                </span>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                {session.tariffName}
+              </p>
+              <div className="flex items-center gap-1.5">
+                {previewLoading ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-green-500 border-t-transparent animate-spin" />
+                ) : (
+                  <>
+                    <Banknote size={14} style={{ color: '#16A34A' }} />
+                    <span
+                      className="text-[22px] font-bold"
+                      style={{ fontFamily: 'JetBrains Mono, monospace', color: '#16A34A' }}
+                    >
+                      ${amount.toLocaleString('es-AR')}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -182,6 +209,7 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
                   value={receivedAmount}
                   onChange={e => setReceivedAmount(e.target.value.replace(/[.,].*/, ''))}
                   min={amount}
+                  disabled={previewLoading}
                   style={{ fontFamily: 'JetBrains Mono, monospace' }}
                 />
               </div>
@@ -213,7 +241,7 @@ export default function ExitModal({ open, session, onClose, onConfirm }: ExitMod
               type="submit"
               className="flex-1 gap-2"
               style={{ background: '#EF4444' }}
-              disabled={(isCash && !changeOk) || loading}
+              disabled={previewLoading || (isCash && !changeOk) || loading}
             >
               <LogOut size={14} />
               Confirmar Salida

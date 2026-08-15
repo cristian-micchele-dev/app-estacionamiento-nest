@@ -45,7 +45,7 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
-  useParkingEvents(fetchData)
+  const { connected } = useParkingEvents(fetchData)
 
   const activeNow = useMemo(() => sessions.filter(s => s.status === 'ACTIVE'), [sessions])
   const completedToday = useMemo(
@@ -83,6 +83,13 @@ export default function DashboardPage() {
           Actualizar
         </button>
       </div>
+
+      {!connected && (
+        <div className="px-4 py-2.5 rounded-lg text-[12px] font-semibold bg-signal/10 text-signal-dark border border-signal/30 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-signal-dark animate-pulse shrink-0" />
+          Sin conexión en tiempo real — reconectando...
+        </div>
+      )}
 
       {error && (
         <div className="px-4 py-3 rounded-lg text-[13px] bg-red-50 text-red-600 border border-red-300">

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { LogIn, LogOut, Car, Clock, TrendingUp, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { LogIn, LogOut, Car, Clock, TrendingUp, CheckCircle, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import EntryModal from '@/components/parking/EntryModal'
 import ExitModal, { type SessionForExit } from '@/components/parking/ExitModal'
@@ -131,7 +131,24 @@ export default function ParkingPage() {
   const [entryOpen, setEntryOpen] = useState(false)
   const [exitSession, setExitSession] = useState<ParkingSessionApi | null>(null)
   const [loading, setLoading] = useState(true)
+  const [plateFilter, setPlateFilter] = useState('')
+  const plateInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  // Keyboard shortcut: N → open entry modal
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault()
+        setEntryOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
 
   function refetch() {
     parkingService.findAll().then(setSessions)
@@ -150,16 +167,20 @@ export default function ParkingPage() {
     }).finally(() => setLoading(false))
   }, [])
 
-  useParkingEvents(refetch)
+  const { connected } = useParkingEvents(refetch)
 
   const activeSessions  = useMemo(() => sessions.filter(s => s.status === 'ACTIVE'),    [sessions])
   const todayCompleted  = useMemo(() => sessions.filter(s => s.status === 'COMPLETED'), [sessions])
 
   const filtered = useMemo(() => {
-    if (tab === 'ACTIVE')    return sessions.filter(s => s.status === 'ACTIVE')
-    if (tab === 'COMPLETED') return sessions.filter(s => s.status === 'COMPLETED')
-    return sessions
-  }, [sessions, tab])
+    let base: ParkingSessionApi[]
+    if (tab === 'ACTIVE')    base = sessions.filter(s => s.status === 'ACTIVE')
+    else if (tab === 'COMPLETED') base = sessions.filter(s => s.status === 'COMPLETED')
+    else base = sessions
+    if (!plateFilter.trim()) return base
+    const q = plateFilter.trim().toUpperCase()
+    return base.filter(s => s.vehicle.plate.includes(q))
+  }, [sessions, tab, plateFilter])
 
   async function handleEntry(data: {
     plate: string; vehicleType: string; tariffId: string; spaceCode: string; notes: string
@@ -211,11 +232,20 @@ export default function ParkingPage() {
         <Button
           onClick={() => setEntryOpen(true)}
           className="gap-2 font-semibold bg-blue-500 hover:bg-blue-600"
+          title="Atajo: N"
         >
           <LogIn size={15} />
           Registrar Entrada
+          <kbd className="ml-1 text-[10px] px-1 rounded bg-blue-400 text-blue-100 font-mono">N</kbd>
         </Button>
       </div>
+
+      {!connected && (
+        <div className="px-4 py-2.5 rounded-lg text-[12px] font-semibold bg-signal/10 text-signal-dark border border-signal/30 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-signal-dark animate-pulse shrink-0" />
+          Sin conexión en tiempo real — reconectando...
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -235,8 +265,9 @@ export default function ParkingPage() {
       {/* Table card */}
       <div className="bg-white rounded-xl shadow-sm">
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 px-4 pt-4 pb-0 border-b border-slate-100">
+        {/* Tabs + search */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-0 border-b border-slate-100">
+          <div className="flex items-center gap-1">
           {TABS.map(({ key, label, count }) => (
             <button
               key={key}
@@ -260,6 +291,20 @@ export default function ParkingPage() {
               </span>
             </button>
           ))}
+          </div>
+
+          {/* Plate search */}
+          <div className="relative mb-1">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              ref={plateInputRef}
+              type="text"
+              placeholder="Buscar patente..."
+              value={plateFilter}
+              onChange={e => setPlateFilter(e.target.value.toUpperCase())}
+              className="pl-7 pr-3 py-1.5 text-[12px] font-mono tracking-widest rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-blue-400 focus:bg-white transition-colors w-40 dark:bg-white/[0.04] dark:border-white/10 dark:text-slate-100"
+            />
+          </div>
         </div>
 
         {/* Table */}

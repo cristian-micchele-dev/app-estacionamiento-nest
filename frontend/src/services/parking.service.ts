@@ -31,9 +31,18 @@ export interface ParkingStats {
   revenueToday: number
 }
 
+export interface PreviewCostApi {
+  durationMinutes: number
+  hasMonthlyPass: boolean
+  estimatedTotal: number
+}
+
 export const parkingService = {
   getStats(): Promise<ParkingStats> {
     return api.get('/parking/stats').then(r => r.data)
+  },
+  previewCost(sessionId: string): Promise<PreviewCostApi> {
+    return api.get(`/parking/sessions/${sessionId}/preview-cost`).then(r => r.data)
   },
   findAll(status?: string): Promise<ParkingSessionApi[]> {
     return api.get('/parking/sessions', { params: status ? { status } : {} }).then(r => r.data.data)

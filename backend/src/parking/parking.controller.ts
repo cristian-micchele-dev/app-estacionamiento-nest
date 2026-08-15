@@ -58,6 +58,11 @@ export class ParkingController {
     return this.svc.createEntry(dto, user.sub);
   }
 
+  @Get('sessions/:id/preview-cost')
+  previewCost(@Param('id') id: string) {
+    return this.exitSvc.previewCost(id);
+  }
+
   @Post('sessions/:id/checkout')
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   checkout(@Param('id') id: string) {

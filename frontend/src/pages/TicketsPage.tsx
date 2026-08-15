@@ -10,6 +10,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
 import { useTickets } from '@/hooks/useTickets'
 import { STATUS_LABEL, STATUS_STYLE } from '@/data/ticketsData'
 import { ticketsService, type TicketApi, type TicketStatus } from '@/services/tickets.service'
@@ -79,11 +89,13 @@ interface TicketDrawerProps {
 
 function TicketDrawer({ ticket, onClose, onCancelled, onReprint, reprinting }: TicketDrawerProps) {
   const [cancelling, setCancelling] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
   const { toast } = useToast()
 
   async function handleCancel() {
     if (!ticket) return
     setCancelling(true)
+    setCancelOpen(false)
     try {
       await ticketsService.cancel(ticket.id)
       toast.success('Ticket cancelado')
@@ -185,17 +197,39 @@ function TicketDrawer({ ticket, onClose, onCancelled, onReprint, reprinting }: T
               Reimprimir ticket
             </Button>
             {ticket.status === 'PENDING' && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 text-sm font-semibold border-red-300 text-red-500 hover:bg-red-50"
-                onClick={handleCancel}
-                disabled={cancelling}
-              >
-                {cancelling
-                  ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                  : <XCircle size={14} />}
-                Cancelar ticket
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 text-sm font-semibold border-red-300 text-red-500 hover:bg-red-50"
+                  onClick={() => setCancelOpen(true)}
+                  disabled={cancelling}
+                >
+                  {cancelling
+                    ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                    : <XCircle size={14} />}
+                  Cancelar ticket
+                </Button>
+
+                <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Cancelar este ticket?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        El ticket <strong>{ticket.session?.ticketNumber}</strong> quedará anulado. Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={() => setCancelOpen(false)}>Volver</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleCancel}
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        Sí, cancelar ticket
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
         )}
@@ -285,6 +319,7 @@ export default function TicketsPage() {
 
   function handleSearch(val: string) { setSearch(val); setPage(1) }
   function handleStatus(val: string | null) { setStatus((val ?? '') as StatusFilter); setPage(1) }
+  function clearFilters() { setSearch(''); setStatus(''); setPage(1) }
 
   const isToday = date === TODAY
   const dateLabel = isToday
@@ -374,6 +409,15 @@ export default function TicketsPage() {
               <SelectItem value="CANCELLED">Cancelado</SelectItem>
             </SelectContent>
           </Select>
+
+          {(search || status) && (
+            <button
+              onClick={clearFilters}
+              className="text-[12px] font-semibold px-2.5 py-1 rounded-lg transition-colors text-blue-500 hover:bg-blue-50"
+            >
+              Limpiar filtros
+            </button>
+          )}
 
           <span className="text-[12px] ml-auto text-slate-400">
             {total} ticket{total !== 1 ? 's' : ''}
