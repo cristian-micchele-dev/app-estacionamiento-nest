@@ -24,8 +24,10 @@ function getTimeClasses(minutes: number): { text: string; dot: string } {
 function calcEstimated(session: ParkingSessionApi): number {
   const minutes = getElapsedMinutes(new Date(session.entryTime))
   if (minutes <= session.tariff.toleranceMinutes) return 0
-  const hours = minutes / 60
-  let amount = Math.round(hours * Number(session.tariff.pricePerHour))
+  const billableMinutes = minutes - session.tariff.toleranceMinutes
+  const blocks = Math.ceil(billableMinutes / 30)
+  const pricePerBlock = Number(session.tariff.pricePerHour) / 2
+  let amount = Math.round(blocks * pricePerBlock * 100) / 100
   if (session.tariff.dailyMax !== null && amount > Number(session.tariff.dailyMax)) {
     amount = Number(session.tariff.dailyMax)
   }
@@ -132,6 +134,7 @@ export default function ParkingPage() {
   const [exitSession, setExitSession] = useState<ParkingSessionApi | null>(null)
   const [loading, setLoading] = useState(true)
   const [plateFilter, setPlateFilter] = useState('')
+  const [exitingId, setExitingId] = useState<string | null>(null)
   const plateInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
@@ -201,15 +204,20 @@ export default function ParkingPage() {
   }
 
   async function handleExit(sessionId: string, paymentMethod: PaymentMethod, receivedAmount?: number) {
-    await parkingService.processExit(sessionId, { paymentMethod, receivedAmount })
-    toast.success('Salida registrada')
-    const [updated, updatedStats] = await Promise.all([
-      parkingService.findAll(),
-      parkingService.getStats(),
-    ])
-    setSessions(updated)
-    setStats(updatedStats)
-    setExitSession(null)
+    setExitingId(sessionId)
+    try {
+      await parkingService.processExit(sessionId, { paymentMethod, receivedAmount })
+      toast.success('Salida registrada')
+      const [updated, updatedStats] = await Promise.all([
+        parkingService.findAll(),
+        parkingService.getStats(),
+      ])
+      setSessions(updated)
+      setStats(updatedStats)
+      setExitSession(null)
+    } finally {
+      setExitingId(null)
+    }
   }
 
   const TABS: { key: FilterTab; label: string; count: number }[] = [
@@ -326,8 +334,17 @@ export default function ParkingPage() {
               {loading && <SkeletonRows />}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-sm text-slate-300">
-                    No hay sesiones
+                  <td colSpan={8}>
+                    <div className="flex flex-col items-center gap-2 py-14 text-slate-300">
+                      <Car size={32} strokeWidth={1.25} />
+                      <p className="text-sm font-medium">
+                        {plateFilter.trim()
+                          ? 'Sin resultados para esa patente'
+                          : tab === 'ACTIVE'
+                            ? 'No hay vehículos activos'
+                            : 'Sin sesiones registradas'}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -393,8 +410,11 @@ export default function ParkingPage() {
                             variant="outline"
                             className="gap-1.5 text-[12px] font-semibold h-7 border-red-300 text-red-500 hover:bg-red-50"
                             onClick={() => setExitSession(session)}
+                            disabled={exitingId === session.id}
                           >
-                            <LogOut size={12} />
+                            {exitingId === session.id
+                              ? <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                              : <LogOut size={12} />}
                             Salida
                           </Button>
                         </div>
