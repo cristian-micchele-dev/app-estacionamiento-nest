@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Search, Receipt, ChevronLeft, ChevronRight, Printer,
   TrendingUp, Clock, CheckCircle, X, XCircle, Car, CalendarDays,
@@ -249,6 +250,9 @@ const DAY_STAT_CARDS = [
 // ─── page ────────────────────────────────────────────────────────────────────
 
 export default function TicketsPage() {
+  const location = useLocation()
+  const consumedState = useRef(false)
+
   const [date,           setDate]           = useState(TODAY)
   const [search,         setSearch]         = useState('')
   const [status,         setStatus]         = useState<StatusFilter>('')
@@ -257,6 +261,14 @@ export default function TicketsPage() {
   const [reprinting,     setReprinting]     = useState(false)
   const [dayStats,       setDayStats]       = useState<DayStats | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (!consumedState.current && location.state?.selectedTicket) {
+      consumedState.current = true
+      setSelectedTicket(location.state.selectedTicket)
+      window.history.replaceState({}, '')
+    }
+  }, [])
 
   const { tickets, loading, total, totalPages, setTickets } = useTickets({
     search:   search || undefined,

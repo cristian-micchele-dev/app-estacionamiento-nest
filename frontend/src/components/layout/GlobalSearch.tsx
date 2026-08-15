@@ -137,7 +137,7 @@ export default function GlobalSearch({ open, onOpenChange }: Props) {
               {tickets.map(t => (
                 <button
                   key={t.id}
-                  onClick={() => goTo('/tickets')}
+                  onClick={() => { onOpenChange(false); navigate('/tickets', { state: { selectedTicket: t } }) }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50"
                 >
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-green-50">
