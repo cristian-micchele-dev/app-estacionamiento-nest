@@ -261,8 +261,8 @@ export default function TicketsPage() {
   const { tickets, loading, total, totalPages, setTickets } = useTickets({
     search:   search || undefined,
     status:   status || undefined,
-    dateFrom: date,
-    dateTo:   date,
+    dateFrom: search ? undefined : date,
+    dateTo:   search ? undefined : date,
     page,
     limit:    PAGE_SIZE,
   })
