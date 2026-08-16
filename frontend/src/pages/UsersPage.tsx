@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, UserCog, ShieldCheck, Users } from 'lucide-react'
+import { useToast } from '@/contexts/ToastContext'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -38,6 +39,7 @@ function formatDate(d: string) {
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'ADMIN'
+  const { toast } = useToast()
   const [users, setUsers] = useState<UserApi[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -61,31 +63,49 @@ export default function UsersPage() {
   }
 
   async function handleAdd(data: UserFormData) {
-    const created = await usersService.create({
-      name: data.name,
-      email: data.email,
-      password: data.password!,
-      role: data.role,
-    })
-    setUsers(prev => [...prev, created])
+    try {
+      const created = await usersService.create({
+        name: data.name,
+        email: data.email,
+        password: data.password!,
+        role: data.role,
+      })
+      setUsers(prev => [...prev, created])
+      toast.success('Usuario creado')
+    } catch (err: any) {
+      const code = err?.response?.data?.message
+      toast.error(code === 'EMAIL_ALREADY_EXISTS' ? 'El email ya está en uso' : 'No se pudo crear el usuario')
+      throw err
+    }
   }
 
   async function handleEdit(data: UserFormData) {
     if (!editTarget) return
-    const updated = await usersService.update(editTarget.id, {
-      name: data.name,
-      role: data.role,
-      isActive: data.isActive,
-    })
-    setUsers(prev => prev.map(u => u.id === editTarget.id ? updated : u))
-    setEditTarget(null)
+    try {
+      const updated = await usersService.update(editTarget.id, {
+        name: data.name,
+        role: data.role,
+        isActive: data.isActive,
+      })
+      setUsers(prev => prev.map(u => u.id === editTarget.id ? updated : u))
+      setEditTarget(null)
+      toast.success('Usuario actualizado')
+    } catch {
+      toast.error('No se pudo actualizar el usuario')
+      throw new Error('update failed')
+    }
   }
 
   async function handleDelete() {
     if (!deleteTarget) return
-    await usersService.remove(deleteTarget.id)
-    setUsers(prev => prev.filter(u => u.id !== deleteTarget.id))
-    setDeleteTarget(null)
+    try {
+      await usersService.remove(deleteTarget.id)
+      setUsers(prev => prev.filter(u => u.id !== deleteTarget.id))
+      setDeleteTarget(null)
+      toast.success('Usuario eliminado')
+    } catch {
+      toast.error('No se pudo eliminar el usuario')
+    }
   }
 
   return (

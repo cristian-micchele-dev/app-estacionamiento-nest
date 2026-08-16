@@ -49,6 +49,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function UserModal({ open, user, onClose, onConfirm }: UserModalProps) {
   const [form, setForm] = useState<UserFormData>(EMPTY)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     setForm(user
@@ -61,10 +62,15 @@ export default function UserModal({ open, user, onClose, onConfirm }: UserModalP
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onConfirm(form)
-    onClose()
+    setSubmitting(true)
+    try {
+      await onConfirm(form)
+      onClose()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const isEdit = !!user
@@ -164,10 +170,11 @@ export default function UserModal({ open, user, onClose, onConfirm }: UserModalP
             <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
             <Button
               type="submit"
-              className="flex-1"
+              className="flex-1 gap-2"
               style={{ background: '#7C3AED' }}
-              disabled={!form.name.trim() || !form.email.trim() || (!isEdit && !form.password?.trim())}
+              disabled={submitting || !form.name.trim() || !form.email.trim() || (!isEdit && !form.password?.trim())}
             >
+              {submitting && <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
               {isEdit ? 'Guardar cambios' : 'Crear Usuario'}
             </Button>
           </div>
