@@ -115,11 +115,11 @@ export default function UserModal({ open, user, onClose, onConfirm }: UserModalP
             <Field label="Contraseña *">
               <Input
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={form.password ?? ''}
                 onChange={e => set('password', e.target.value)}
                 required={!isEdit}
-                minLength={6}
+                minLength={8}
               />
             </Field>
           )}
@@ -172,7 +172,7 @@ export default function UserModal({ open, user, onClose, onConfirm }: UserModalP
               type="submit"
               className="flex-1 gap-2"
               style={{ background: '#7C3AED' }}
-              disabled={submitting || !form.name.trim() || !form.email.trim() || (!isEdit && !form.password?.trim())}
+              disabled={submitting || !form.name.trim() || !form.email.trim() || (!isEdit && (form.password ?? '').length < 8)}
             >
               {submitting && <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
               {isEdit ? 'Guardar cambios' : 'Crear Usuario'}
