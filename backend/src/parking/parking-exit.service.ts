@@ -27,12 +27,18 @@ export class ParkingExitService {
 
     const session = await sessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['vehicle', 'tariff'],
+      relations: ['vehicle'],
     });
 
     if (!session) throw new NotFoundException('SESSION_NOT_FOUND');
     if (session.status !== SessionStatus.ACTIVE)
       throw new BadRequestException('SESSION_NOT_ACTIVE');
+
+    if (session.tariffId) {
+      session.tariff = await this.dataSource
+        .getRepository(TariffOrmEntity)
+        .findOne({ where: { id: session.tariffId }, withDeleted: true });
+    }
 
     // Wrap check + creation in a transaction to prevent duplicate tickets
     // when two concurrent exit requests arrive for the same session.
@@ -73,11 +79,17 @@ export class ParkingExitService {
     const sessionRepo = this.dataSource.getRepository(ParkingSessionOrmEntity);
     const session = await sessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['vehicle', 'tariff'],
+      relations: ['vehicle'],
     });
     if (!session) throw new NotFoundException('SESSION_NOT_FOUND');
     if (session.status !== SessionStatus.ACTIVE)
       throw new BadRequestException('SESSION_NOT_ACTIVE');
+
+    if (session.tariffId) {
+      session.tariff = await this.dataSource
+        .getRepository(TariffOrmEntity)
+        .findOne({ where: { id: session.tariffId }, withDeleted: true });
+    }
 
     const now = new Date();
     const durationMinutes = Math.floor(
