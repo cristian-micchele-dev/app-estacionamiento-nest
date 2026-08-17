@@ -43,7 +43,7 @@ export default function RecentActivityFeed({ sessions, loading, onViewAll }: Pro
 
           {activeNow.length > 0 && (
             <>
-              <div className="px-5 py-2 sticky top-0 bg-slate-50 border-b border-slate-100">
+              <div className="px-5 py-2 bg-slate-50 border-b border-slate-100">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-green-500">
                   En playa · {activeNow.length}
                 </span>
@@ -75,10 +75,7 @@ export default function RecentActivityFeed({ sessions, loading, onViewAll }: Pro
 
           {recentCompleted.length > 0 && (
             <>
-              <div
-                className="px-5 py-2 sticky bg-slate-50 border-b border-slate-100"
-                style={{ top: activeNow.length > 0 ? 33 : 0 }}
-              >
+              <div className="px-5 py-2 bg-slate-50 border-b border-slate-100">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                   Completadas
                 </span>
