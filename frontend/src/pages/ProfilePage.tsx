@@ -73,7 +73,7 @@ export default function ProfilePage() {
   const passwordMismatch = Boolean(confirmPassword && confirmPassword !== newPassword)
 
   return (
-    <div className="flex flex-col gap-5 max-w-2xl">
+    <div className="flex flex-col gap-5 max-w-2xl mx-auto w-full">
       {/* Header */}
       <div>
         <h1 className="text-[20px] font-bold tracking-tight text-ink">Mi perfil</h1>
