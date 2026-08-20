@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
+import ChatWidget from '@/components/chat/ChatWidget'
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -24,6 +25,7 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+      <ChatWidget />
     </div>
   )
 }

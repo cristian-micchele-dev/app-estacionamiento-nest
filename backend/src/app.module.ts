@@ -26,6 +26,7 @@ import { AuditModule } from './audit/audit.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { HealthModule } from './health/health.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { HealthModule } from './health/health.module';
     AuditModule,
     DashboardModule,
     HealthModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
